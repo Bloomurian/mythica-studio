@@ -234,10 +234,12 @@ const esc = s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt
 const uid = ()=> "e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ───────── native bridge ───────── */
-const NATIVE = !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.mythica);
-let rid=0; const waiting={};
+let NATIVE = !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.mythica);  /* turned off if the app doesn't answer (older app build) */
+let rid=0, OLDAPP=false; const waiting={};
 window.MYTH_native = m => { const f=waiting[m.rid]; if(f){ delete waiting[m.rid]; f(m.data); } };
-function call(op, args){ return new Promise(res=>{ if(!NATIVE) return res(null); const r=++rid; waiting[r]=res;
+function call(op, args, ms){ return new Promise(res=>{ if(!NATIVE) return res(null); const r=++rid; waiting[r]=res;
+  /* never hang: an app build without the Mythica bridge simply doesn't reply */
+  setTimeout(()=>{ if(waiting[r]){ delete waiting[r]; res(null); } }, ms|| (op==="hello"?2500:op==="scan"||op==="counts"||op==="albums"||op==="export"||op==="pickFolder"||op==="auth"?600000:20000));
   window.webkit.messageHandlers.mythica.postMessage(JSON.stringify(Object.assign({myth:op,rid:r},args||{}))); }); }
 let photosOK=false, liveCounts=null, LIVEM=null;
 
@@ -500,7 +502,7 @@ function renderPicker(){
 }
 async function authPhotos(){ const s=await call("auth"); photosOK=(s==="yes"||s==="limited"); setPstat(s); if(photosOK){ await loadLive(); } return photosOK; }
 function setPstat(s){ const el=$("#pstat");
-  if(!NATIVE){ el.className="pstat off"; el.textContent="Writing mode · open the Mac app for photos"; return; }
+  if(!NATIVE){ el.className="pstat off"; el.textContent=OLDAPP?"⟳ Rebuild the app to link photos":"Writing mode · open the Mac app for photos"; return; }
   if(s==="yes"||s==="limited"){ el.className="pstat on"; el.textContent="● Apple Photos linked"+(s==="limited"?" (selected only)":""); }
   else { el.className="pstat off"; el.textContent="○ Connect Apple Photos"; el.dataset.auth=1; } }
 
@@ -718,7 +720,9 @@ document.addEventListener("keydown", e=>{
 /* ───────── boot ───────── */
 (async function boot(){
   let data=null;
-  if(NATIVE){ const h=await call("hello"); if(h){ data=h.data; photosOK=(h.photos==="yes"||h.photos==="limited"); setPstat(h.photos); } }
+  if(NATIVE){ const h=await call("hello");
+    if(h){ data=h.data; photosOK=(h.photos==="yes"||h.photos==="limited"); setPstat(h.photos); }
+    else { NATIVE=false; OLDAPP=true; setPstat(); } }
   else setPstat();
   if(!data){ try{ const ls=localStorage.getItem("mythica-studio-standalone"); if(ls) data=JSON.parse(ls); }catch(e){} }
   S=data&&data.events?data:fromSeed();
