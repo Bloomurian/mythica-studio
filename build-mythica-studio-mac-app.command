@@ -16,7 +16,7 @@ fi
 BUILD="$HERE/build"; APP="$BUILD/Mythica Studio.app"
 rm -rf "$BUILD"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 say "Compiling…"
-xcrun swiftc -O -target "$(uname -m)-apple-macos12.3" -o "$APP/Contents/MacOS/MythicaStudio" \
+xcrun swiftc -parse-as-library -O -target "$(uname -m)-apple-macos12.3" -o "$APP/Contents/MacOS/MythicaStudio" \
   "$HERE/mac/mythica-studio-mac-main.swift" "$HERE/mac/mythica-studio-mac-bridge.swift" \
   -framework Cocoa -framework WebKit -framework Photos -framework AVFoundation -framework QuickLookThumbnailing -framework ImageIO >>"$LOG" 2>&1 \
   || fail "Compile failed. Look in build-log.txt in this folder."
