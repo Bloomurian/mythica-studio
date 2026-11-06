@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mythica Studio</title>
+<style>
+:root{
+  --bg:#04110c;--bg2:#071a13;--panel:rgba(9,32,24,.72);--panel2:rgba(12,40,30,.92);
+  --line:rgba(245,208,122,.14);--line2:rgba(245,208,122,.32);
+  --gold:#f5d07a;--gold2:#d4af37;--gold3:#fff1c4;--teal:#43e6c3;--cyan:#7fdcff;--violet:#b59bff;
+  --text:#eef6ef;--text2:#bfd3c6;--muted:#7d9a8a;--rose:#fb7185;--green:#4ade80;--orange:#fb923c;
+  --serif:"Palatino","Palatino Linotype","Book Antiqua","Marcellus",Georgia,serif;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(1100px 600px at 80% -10%,rgba(67,230,195,.10),transparent 60%),radial-gradient(900px 700px at -10% 100%,rgba(181,155,255,.09),transparent 60%),var(--bg);
+  color:var(--text);font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+input,textarea,select{font:inherit;color:var(--text)}
+.serif{font-family:var(--serif)}
+#ff{position:fixed;inset:0;z-index:0;pointer-events:none}
+.app{position:relative;z-index:1;display:grid;grid-template-columns:210px 1fr;grid-template-rows:auto 1fr;height:100vh}
+/* top bar */
+.top{grid-column:1/3;display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:14px 22px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(4,17,12,.9),rgba(4,17,12,.55));backdrop-filter:blur(8px)}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-family:var(--serif);font-weight:normal;font-size:24px;letter-spacing:.06em;background:linear-gradient(135deg,var(--gold3),var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand small{color:var(--muted);font-style:italic;font-family:var(--serif)}
+.stats{display:flex;gap:16px;margin-left:12px;color:var(--text2);font-size:12px}
+.stats span{white-space:nowrap}
+.stats b{color:var(--gold3);font-size:15px;font-family:var(--serif);font-weight:normal;margin-right:3px}
+.sp{flex:1}
+.btn{padding:7px 13px;border-radius:999px;border:1px solid var(--line2);background:rgba(245,208,122,.06);color:var(--gold3);font-size:12.5px;white-space:nowrap;transition:all .2s}
+.btn:hover{background:rgba(245,208,122,.16);border-color:var(--gold)}
+.btn.pri{background:linear-gradient(135deg,rgba(245,208,122,.28),rgba(212,175,55,.18));border-color:var(--gold);color:#fff8de;box-shadow:0 0 18px rgba(245,208,122,.18)}
+.btn.ghost{border-color:transparent;background:none;color:var(--text2)}
+.btn.tl{border-color:rgba(67,230,195,.4);color:var(--teal);background:rgba(67,230,195,.06)}
+.btn.dn{border-color:rgba(251,113,133,.4);color:var(--rose);background:rgba(251,113,133,.05)}
+.btn:disabled{opacity:.35;cursor:default}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text2)}
+.pstat{font-size:11.5px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--text2)}
+.pstat.on{border-color:rgba(74,222,128,.45);color:var(--green)}
+.pstat.off{border-color:rgba(251,146,60,.45);color:var(--orange);cursor:pointer}
+/* year rail */
+.rail{overflow-y:auto;padding:14px 10px 40px;border-right:1px solid var(--line);background:rgba(4,17,12,.45)}
+.yr{display:block;width:100%;text-align:left;padding:9px 10px 10px;border-radius:12px;margin-bottom:4px;border:1px solid transparent;transition:all .2s}
+.yr:hover{background:rgba(245,208,122,.05)}
+.yr.on{background:linear-gradient(135deg,rgba(245,208,122,.13),rgba(67,230,195,.05));border-color:var(--line2)}
+.yr .y{font-family:var(--serif);font-size:19px;color:var(--gold3);display:flex;justify-content:space-between;align-items:baseline}
+.yr .y small{font-size:11px;color:var(--muted);font-family:-apple-system,sans-serif}
+.yr .t{font-size:11.5px;color:var(--text2);font-style:italic;font-family:var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dots{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:6px}
+.dots i{height:5px;border-radius:3px;background:rgba(255,255,255,.07)}
+.dots i.ph{background:rgba(127,220,255,.22)}
+.dots i.ev{background:var(--gold2)}
+.dots i.told{background:var(--gold3);box-shadow:0 0 6px var(--gold)}
+.dots i.q{background:rgba(181,155,255,.35)}
+/* main */
+.main{overflow-y:auto;padding:0 0 80px}
+.yhead{position:relative;padding:30px 34px 22px;min-height:170px;display:flex;flex-direction:column;justify-content:flex-end;background-size:cover;background-position:center 40%}
+.yhead::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,17,12,.25),rgba(4,17,12,.75) 60%,var(--bg))}
+.yhead>*{position:relative}
+.yhead .k{font-size:11px;letter-spacing:.35em;text-transform:uppercase;color:var(--gold)}
+.yhead h2{font-family:var(--serif);font-weight:normal;font-size:38px;letter-spacing:.03em;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.7)}
+.yhead .sub{font-family:var(--serif);font-style:italic;color:var(--gold3);opacity:.85}
+.yhead .lore{max-width:860px;margin-top:10px;color:var(--text2);font-family:var(--serif);font-size:15px;line-height:1.7}
+.inl{background:transparent;border:1px dashed transparent;border-radius:8px;padding:2px 6px;margin-left:-6px;width:100%;outline:none;resize:none}
+.inl:hover{border-color:var(--line)}.inl:focus{border-color:var(--gold);background:rgba(4,17,12,.6)}
+.ybar{display:flex;gap:10px;align-items:center;padding:6px 34px 16px;flex-wrap:wrap}
+.undated{margin:0 34px 16px;padding:12px 14px;border:1px dashed var(--line2);border-radius:var(--r);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.undated .lbl{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;padding:0 34px}
+.mo{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 13px 13px;display:flex;flex-direction:column;gap:8px;min-height:170px;transition:all .25s;animation:rise .4s ease both}
+.mo:hover{border-color:var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.mo.blank{border-style:dashed}
+.mo.quiet{opacity:.55}
+.mo.future{opacity:.3;pointer-events:none}
+.mo.hl{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 30px rgba(245,208,122,.25)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.mo .mh{display:flex;align-items:baseline;gap:8px}
+.mo .mn{font-family:var(--serif);font-size:18px;color:var(--gold3)}
+.mo .cnt{font-size:11px;color:var(--muted)}
+.mo .heat{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--teal));opacity:.7}
+.mosaic{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;border-radius:9px;overflow:hidden;cursor:pointer}
+.mosaic img,.mosaic .ph0{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:rgba(255,255,255,.04)}
+.evs{display:flex;flex-direction:column;gap:5px}
+.ev{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid var(--line);text-align:left;width:100%;transition:all .2s}
+.ev:hover{background:rgba(245,208,122,.09);border-color:var(--line2)}
+.ev img,.ev .ic{width:34px;height:34px;border-radius:7px;object-fit:cover;flex:none;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:16px}
+.ev .et{flex:1;min-width:0}
+.ev .et b{display:block;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .et span{font-size:11px;color:var(--muted)}
+.ev .st{font-size:13px}
+.ev.cont{opacity:.55}
+.sugs{display:flex;flex-direction:column;gap:4px}
+.sug{display:flex;gap:6px;align-items:center;text-align:left;font-size:12px;color:var(--text2);padding:5px 8px;border-radius:9px;border:1px dashed rgba(127,220,255,.25);background:rgba(127,220,255,.04);width:100%}
+.sug:hover{border-color:var(--cyan);color:#fff;background:rgba(127,220,255,.1)}
+.sug em{color:var(--cyan);font-style:normal;margin-left:auto;font-size:11px;white-space:nowrap}
+.blankmsg{font-family:var(--serif);font-style:italic;color:var(--muted);font-size:13.5px}
+.moact{display:flex;gap:6px;margin-top:auto;padding-top:4px}
+.moact .btn{font-size:11.5px;padding:5px 10px}
+/* drawer / modals */
+.veil{position:fixed;inset:0;background:rgba(2,8,6,.72);backdrop-filter:blur(5px);z-index:50;display:none;animation:fade .25s}
+.veil.on{display:block}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,96vw);z-index:60;background:linear-gradient(180deg,#0a2219,#06150f);border-left:1px solid var(--line2);box-shadow:-30px 0 80px rgba(0,0,0,.5);transform:translateX(102%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.dcov{position:relative;height:230px;flex:none;background:#0b241a center/cover no-repeat}
+.dcov::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,17,12,.1),rgba(6,21,15,.96))}
+.dcov .x{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.5);font-size:16px}
+.dcov .nav2{position:absolute;top:12px;left:12px;z-index:2;display:flex;gap:6px}
+.dcov .ttl{position:absolute;left:24px;right:24px;bottom:14px;z-index:2}
+.dcov .ttl input{font-family:var(--serif);font-size:28px;color:#fff;background:transparent;border:none;outline:none;width:100%;text-shadow:0 2px 14px #000}
+.dcov .ttl .meta{color:var(--gold3);font-size:12px;letter-spacing:.05em}
+.dbody{flex:1;overflow-y:auto;padding:18px 24px 120px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.f{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.f label,.lab{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.f .hint{font-size:11.5px;color:var(--muted);font-style:italic}
+.in{background:rgba(4,17,12,.65);border:1px solid var(--line);border-radius:10px;padding:8px 11px;outline:none;width:100%;transition:border-color .2s}
+.in:focus{border-color:var(--gold)}
+textarea.in{resize:vertical;min-height:90px;line-height:1.65;font-family:var(--serif);font-size:15px}
+textarea.big{min-height:180px}
+.kinds{display:flex;flex-wrap:wrap;gap:6px}
+.kind{padding:5px 11px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;color:var(--text2)}
+.kind.on{border-color:var(--gold);background:rgba(245,208,122,.14);color:#fff}
+.tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.tile{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid var(--line);cursor:pointer}
+.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.tile .badge{position:absolute;left:5px;bottom:5px;font-size:10px;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:8px}
+.tile .tb{position:absolute;top:4px;right:4px;display:flex;gap:3px;opacity:0;transition:opacity .2s}
+.tile:hover .tb{opacity:1}
+.tile .tb button{width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.65);font-size:12px}
+.tile.cover{outline:2px solid var(--gold);outline-offset:-2px}
+.tile .miss{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10.5px;color:var(--muted);padding:6px}
+.tile.sel{outline:3px solid var(--teal);outline-offset:-3px}
+.tile.sel::after{content:"✓";position:absolute;top:5px;left:6px;background:var(--teal);color:#032;width:20px;height:20px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.addtile{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;color:var(--gold3);border-style:dashed;font-size:12px}
+.prompts{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 8px}
+.prompt{font-size:11.5px;padding:4px 9px;border-radius:999px;border:1px dashed var(--line2);color:var(--text2);font-family:var(--serif);font-style:italic}
+.prompt:hover{color:#fff;border-color:var(--gold)}
+.thr{display:flex;flex-wrap:wrap;gap:6px}
+.thr .chip.on{border-color:var(--gold);color:var(--gold3);background:rgba(245,208,122,.1)}
+.dfoot{position:absolute;left:0;right:0;bottom:0;display:flex;gap:10px;align-items:center;padding:12px 24px;background:linear-gradient(0deg,#06150f 70%,transparent)}
+.status{display:flex;gap:6px}
+.status button{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:var(--text2)}
+.status button.on{border-color:var(--gold);color:#fff;background:rgba(245,208,122,.16)}
+.status button.on.told{background:linear-gradient(135deg,rgba(245,208,122,.4),rgba(212,175,55,.25));box-shadow:0 0 16px rgba(245,208,122,.35)}
+.modal{position:fixed;inset:4vh 4vw;z-index:70;background:linear-gradient(180deg,#0a2219,#06150f);border:1px solid var(--line2);border-radius:18px;box-shadow:0 30px 100px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden}
+.modal.on{display:flex;animation:fade .25s}
+.modal.small{inset:10vh max(4vw,calc(50vw - 340px)) auto;max-height:80vh}
+.mhd{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.mhd h3{font-family:var(--serif);font-weight:normal;font-size:20px;color:var(--gold3);margin-right:8px}
+.tabs{display:flex;gap:4px}
+.tabs button{padding:6px 12px;border-radius:999px;font-size:12.5px;color:var(--text2);border:1px solid transparent}
+.tabs button.on{border-color:var(--line2);color:#fff;background:rgba(245,208,122,.1)}
+.mbd{flex:1;overflow-y:auto;padding:14px 18px 24px}
+.dayh{display:flex;align-items:center;gap:10px;margin:16px 0 8px;font-family:var(--serif);color:var(--gold3);font-size:15px}
+.dayh:first-child{margin-top:0}
+.dayh .btn{font-size:11px;padding:3px 9px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.empty{padding:40px;text-align:center;color:var(--muted);font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.8}
+.lb{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.lb.on{display:flex}
+.lb img,.lb video{max-width:94vw;max-height:84vh;border-radius:8px;box-shadow:0 20px 60px #000}
+.lb .cap{color:var(--text2);font-size:12.5px;display:flex;gap:10px;align-items:center}
+.lb .ar{position:absolute;top:50%;transform:translateY(-50%);width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.08);font-size:28px;color:#fff}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:100;background:rgba(9,32,24,.96);border:1px solid var(--line2);padding:10px 18px;border-radius:999px;color:var(--gold3);font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.on{opacity:1}
+.spark{position:fixed;z-index:120;pointer-events:none;width:6px;height:6px;border-radius:50%;background:var(--gold3);box-shadow:0 0 10px var(--gold)}
+.trow{border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px;background:var(--panel)}
+.trow h4{font-family:var(--serif);font-weight:normal;font-size:17px;color:var(--gold3)}
+.exgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.excard{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--panel);display:flex;flex-direction:column;gap:8px}
+.excard h4{font-family:var(--serif);font-weight:normal;font-size:18px;color:var(--gold3)}
+.excard p{color:var(--text2);font-size:13px}
+.folders .frow{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px}
+.folders .frow .p{flex:1;min-width:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)}
+.note{font-size:12px;color:var(--muted);line-height:1.6}
+kbd{font-size:10.5px;border:1px solid var(--line2);border-radius:4px;padding:0 4px;color:var(--gold3)}
+.evc{display:block;width:100%;text-align:left;font-size:11.5px;color:var(--muted);padding:2px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:6px}
+.evc:hover{color:var(--gold3);background:rgba(245,208,122,.06)}
+@media (max-width:1150px){.brand small{display:none}.stats{margin-left:0}}
+@media (max-width:900px){.app{grid-template-columns:1fr}.rail{display:none}.months{padding:0 14px}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<canvas id="ff"></canvas>
+<div class="app">
+  <div class="top">
+    <div class="brand"><h1>✦ Mythica Studio</h1><small>fill in the story, month by month</small></div>
+    <div class="stats" id="stats"></div>
+    <div class="sp"></div>
+    <span class="pstat" id="pstat">…</span>
+    <button class="btn pri" id="bNext" title="Jump to the next month that has photos but no story yet (N)">✦ Next blank</button>
+    <button class="btn" id="bThreads">⟡ Threads</button>
+    <button class="btn" id="bFolders">🗂 Folders</button>
+    <button class="btn" id="bExport">⇪ Export</button>
+    <button class="btn ghost" id="bSettings" title="Settings">⚙</button>
+  </div>
+  <nav class="rail" id="rail"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="veil" id="veil"></div>
+<aside class="drawer" id="drawer"></aside>
+<section class="modal" id="modal"></section>
+<div class="lb" id="lb"></div>
+<div class="toast" id="toast"></div>
+
+<script src="mythica-studio-seed.js"></script>
+<script>
+"use strict";
+/* ═════════════ Mythica Studio (standalone) ═════════════
+   Data:   ~/Documents/Mythica Studio/mythica-studio-data.json (written by the Mac app; daily copies in /backups)
+   Seed:   mythica-studio-seed.js (optional starting story; empty by default)
+   Media:  linked in place — {k:'ph',id} Apple Photos · {k:'f',p} file on disk/drive · {k:'loc',p} file inside the CLAUDE folder
+   Native: Mac app bridge (mac/mythica-studio-mac-bridge.swift). In a plain browser writing works (saved in the browser), Photos/folders don't. */
+const SEED = Object.assign({years:{},events:[],threads:[],months:{},folders:[]}, window.MYTH_SEED||{});
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MSHORT = MONTHS.map(m=>m.slice(0,3));
+const KINDS = {journey:["✈️","Journey"],show:["🎛️","Show"],gathering:["🔥","Gathering"],teaching:["📚","Teaching"],release:["💿","Release"],
+  ceremony:["🌿","Ceremony"],home:["🏡","Home & land"],family:["🌳","Family"],love:["💗","Love"],other:["✦","Other"]};
+const PROMPTS = ["What called you there?","Who did you meet, and what did they bring?","Which song was playing — or which song came out of it?",
+  "What felt like a sign or a synchronicity?","How did this change the music?","What did the land teach you?","Where does this thread show up again later?",
+  "What would you tell yourself at the start of this?","What did it smell, sound, taste like?","What were you letting go of?","Who were you becoming?"];
+const NOW = new Date(); const NOWKEY = NOW.getFullYear()+"-"+String(NOW.getMonth()+1).padStart(2,"0");
+let YEARS = [];
+function setYears(){ const ys=(S&&S.events||[]).map(e=>parts(e.start).y).filter(Boolean);
+  const st=Math.min((S&&S.startYear)||Infinity, ys.length?Math.min(...ys):Infinity); const a=isFinite(st)?Math.min(st,NOW.getFullYear()):NOW.getFullYear()-4;
+  YEARS=[]; for(let y=a;y<=NOW.getFullYear();y++) YEARS.push(y); }
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = ()=> "e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ───────── native bridge ───────── */
+const NATIVE = !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.mythica);
+let rid=0; const waiting={};
+window.MYTH_native = m => { const f=waiting[m.rid]; if(f){ delete waiting[m.rid]; f(m.data); } };
+function call(op, args){ return new Promise(res=>{ if(!NATIVE) return res(null); const r=++rid; waiting[r]=res;
+  window.webkit.messageHandlers.mythica.postMessage(JSON.stringify(Object.assign({myth:op,rid:r},args||{}))); }); }
+let photosOK=false, liveCounts=null, LIVEM=null;
+
+/* ───────── state ───────── */
+let S=null, cur={year:null, ev:null}, saveT=null;
+function fromSeed(){
+  return {v:1, created:new Date().toISOString(), years:JSON.parse(JSON.stringify(SEED.years||{})),
+    events:JSON.parse(JSON.stringify(SEED.events||[])), threads:JSON.parse(JSON.stringify(SEED.threads||[])),
+    quiet:{}, folders:JSON.parse(JSON.stringify(SEED.folders||[])), notes:{}};
+}
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(async ()=>{
+    S.updated=new Date().toISOString();
+    const txt=JSON.stringify(S,null,1);
+    try{ localStorage.setItem("mythica-studio-standalone",txt); }catch(e){}
+    if(NATIVE){ const ok=await call("save",{data:txt}); if(!ok) toast("⚠ Couldn't save the story file — your work is kept in this browser"); }
+  },600);
+}
+function ev(id){ return S.events.find(e=>e.id===id); }
+
+/* ───────── dates ───────── */
+function parts(d){ d=String(d||""); return {y:+d.slice(0,4)||null, m:d.length>=7?+d.slice(5,7):null, d:d.length>=10?+d.slice(8,10):null}; }
+function monthsOf(e){
+  const a=parts(e.start), b=parts(e.end||e.start);
+  if(!a.y) return []; if(!a.m) return [];
+  const out=[]; let y=a.y, m=a.m; const ey=b.y||a.y, em=b.m||(b.y&&b.y!==a.y?12:a.m);
+  while((y<ey||(y===ey&&m<=em)) && out.length<14){ out.push(y+"-"+String(m).padStart(2,"0")); m++; if(m>12){m=1;y++;} }
+  return out;
+}
+function fmtRange(e){
+  const a=parts(e.start), b=parts(e.end||e.start);
+  if(!a.y) return "Undated";
+  if(!a.m) return String(a.y);
+  const A=MSHORT[a.m-1]+(a.d?" "+a.d:""), sameY=a.y===b.y;
+  if(!e.end||e.end===e.start) return A+", "+a.y;
+  if(sameY && a.m===b.m && a.d && b.d) return MSHORT[a.m-1]+" "+a.d+"–"+b.d+", "+a.y;
+  const B=(b.m?MSHORT[b.m-1]:"")+(b.d?" "+b.d:"");
+  return A+(sameY?"":", "+a.y)+" – "+B+", "+(b.y||a.y);
+}
+function rangeMs(e,pad){
+  const a=parts(e.start), b=parts(e.end||e.start); pad=pad||0;
+  const s=new Date(a.y, (a.m||1)-1, a.d||1); const eb=b.y||a.y;
+  let en = b.d ? new Date(eb,b.m-1,b.d+1) : b.m ? new Date(eb,b.m,1) : new Date(eb+1,0,1);
+  return [s.getTime()-pad*864e5, en.getTime()+pad*864e5];
+}
+function eventsIn(key){ return S.events.filter(e=>monthsOf(e).includes(key)).sort((x,y)=>String(x.start).localeCompare(String(y.start))); }
+function SUGM(key){ return (LIVEM&&LIVEM[key])||(SEED.months||{})[key]; }
+function countFor(key){ if(liveCounts&&liveCounts[key]) return liveCounts[key][0]+liveCounts[key][1]; const m=(SEED.months||{})[key]; return m?m.n+m.v:0; }
+function vidFor(key){ if(liveCounts&&liveCounts[key]) return liveCounts[key][1]; const m=(SEED.months||{})[key]; return m?m.v:0; }
+function monthState(key){
+  if(key>NOWKEY) return "future";
+  const es=eventsIn(key);
+  if(es.length) return es.some(e=>e.status==="told")?"told":"ev";
+  if(S.quiet[key]) return "q";
+  return countFor(key)?"ph":"";
+}
+
+/* ───────── media ───────── */
+const enc=encodeURIComponent;
+function thumb(r){ if(!r) return null;
+  if(r.k==="loc") return r.p.split("/").map(enc).join("/");
+  if(!NATIVE) return null;
+  if(r.k==="ph") return photosOK?"mythmedia://ph/thumb?id="+enc(r.id):null;
+  if(r.k==="f") return "mythmedia://f/thumb?p="+enc(r.p);
+  return null; }
+function full(r){ if(!r) return null;
+  if(r.k==="loc") return thumb(r);
+  if(!NATIVE) return null;
+  if(r.k==="ph") return r.v ? "mythmedia://ph/video?id="+enc(r.id) : "mythmedia://ph/full?id="+enc(r.id);
+  return (r.v?"mythmedia://f/raw?p=":"mythmedia://f/full?p=")+enc(r.p); }
+const refKey=r=>r.k+":"+(r.id||r.p);
+function mediaOf(e){ return (e.cover?[e.cover]:[]).concat(e.media||[]); }
+function imgTag(r,cls){ const u=thumb(r);
+  return u?`<img loading="lazy" class="${cls||""}" src="${esc(u)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph0'}))">`:`<div class="ph0"></div>`; }
+
+/* ───────── rail + stats ───────── */
+function renderRail(){
+  $("#rail").innerHTML=YEARS.map(y=>{
+    const ch=S.years[y]||{}; let filled=0, live=0;
+    const dots=MONTHS.map((_,i)=>{ const k=y+"-"+String(i+1).padStart(2,"0"); const st=monthState(k);
+      if(st!=="future"){ live++; if(st==="told"||st==="ev"||st==="q") filled++; }
+      return `<i class="${st==="future"?"":st}"></i>`; }).join("");
+    return `<button class="yr ${y===cur.year?"on":""}" data-year="${y}"><div class="y">${y}<small>${live?Math.round(filled/live*100):0}%</small></div>
+      <div class="t">${esc(ch.title||"Untitled chapter")}</div><div class="dots">${dots}</div></button>`;
+  }).join("");
+}
+function renderStats(){
+  const told=S.events.filter(e=>e.status==="told").length, links=S.events.reduce((a,e)=>a+mediaOf(e).length,0);
+  let blanks=0; YEARS.forEach(y=>{ for(let m=1;m<=12;m++){ const k=y+"-"+String(m).padStart(2,"0"); if(monthState(k)==="ph") blanks++; }});
+  $("#stats").innerHTML=`<span><b>${S.events.length}</b>moments</span><span><b>${told}</b>told</span><span><b>${links}</b>photos & videos linked</span><span><b>${blanks}</b>blanks with photos</span>`;
+}
+
+/* ───────── year view ───────── */
+function renderYear(scrollKey){
+  const y=cur.year, ch=S.years[y]||(S.years[y]={title:"",subtitle:"",theme:"",lore:""});
+  const yEvents=S.events.filter(e=>parts(e.start).y===y);
+  const coverEv=yEvents.find(e=>e.cover&&thumb(e.cover));
+  const coverU=coverEv?thumb(coverEv.cover):null;
+  const undated=yEvents.filter(e=>!parts(e.start).m);
+  let html=`<header class="yhead" style="${coverU?`background-image:url('${esc(coverU)}')`:""}">
+    <div class="k">Chapter ${y-YEARS[0]+1} · ${y}</div>
+    <h2><input class="inl serif" data-yf="title" value="${esc(ch.title)}" placeholder="Name this chapter…" style="font-size:38px;color:#fff"></h2>
+    <div class="sub"><input class="inl serif" data-yf="subtitle" value="${esc(ch.subtitle)}" placeholder="A subtitle…" style="font-style:italic;color:var(--gold3)"></div>
+    <div class="lore"><textarea class="inl" data-yf="lore" rows="2" placeholder="The lore of ${y} — what was this year really about?">${esc(ch.lore)}</textarea></div>
+  </header>
+  <div class="ybar"><button class="btn" data-add="${y}">+ Moment in ${y}</button>
+    <span class="note">Click a suggestion to turn it into a moment · ✓ mark a month quiet if nothing needs telling · <kbd>←</kbd><kbd>→</kbd> years · <kbd>N</kbd> next blank</span></div>`;
+  if(undated.length) html+=`<div class="undated"><span class="lbl">Sometime in ${y}</span>${undated.map(e=>evRow(e)).join("")}</div>`;
+  html+=`<div class="months">`;
+  for(let m=1;m<=12;m++){
+    const key=y+"-"+String(m).padStart(2,"0"), st=monthState(key), es=eventsIn(key), cnt=countFor(key);
+    const firsts=es.filter(e=>monthsOf(e)[0]===key), conts=es.filter(e=>monthsOf(e)[0]!==key);
+    const pics=[]; es.forEach(e=>mediaOf(e).slice(0,3).forEach(r=>{ if(pics.length<4&&thumb(r)) pics.push(r); }));
+    const sugs=suggestionsFor(key, es);
+    const maxc=Math.max(1,...Object.keys(liveCounts||SEED.months||{}).map(countFor));
+    html+=`<div class="mo ${st==="future"?"future":""} ${!es.length&&st!=="q"&&st!=="future"?"blank":""} ${st==="q"?"quiet":""}" data-month="${key}">
+      <div class="mh"><span class="mn">${MONTHS[m-1]}</span><span class="cnt">${cnt?cnt+" in Photos"+(vidFor(key)?" · "+vidFor(key)+" ▶":""):""}</span>
+        <span class="sp"></span>${st==="told"?'<span title="told">✦</span>':""}</div>
+      ${cnt?`<div class="heat" style="width:${Math.max(4,Math.round(Math.sqrt(cnt/maxc)*100))}%"></div>`:""}
+      ${pics.length?`<div class="mosaic" data-open="${esc((firsts[0]||es[0]).id)}">${pics.map(r=>imgTag(r)).join("")}</div>`:""}
+      <div class="evs">${firsts.map(e=>evRow(e)).join("")}${conts.map(e=>`<button class="evc" data-open="${esc(e.id)}">↳ continues: ${esc(e.title)}</button>`).join("")}</div>
+      ${sugs.length?`<div class="sugs">${sugs.map(s=>`<button class="sug" data-sug="${esc(JSON.stringify(s))}">✦ ${esc(s.label)}<em>${esc(s.meta)}</em></button>`).join("")}</div>`:""}
+      ${!es.length&&!sugs.length&&st!=="q"?`<div class="blankmsg">${cnt?`${cnt} photos waiting — what happened in ${MONTHS[m-1]}?`:`A blank page. What do you remember from ${MONTHS[m-1]} ${y}?`}</div>`:""}
+      ${st==="q"?`<div class="blankmsg">A quiet month.</div>`:""}
+      <div class="moact"><button class="btn" data-addm="${key}">+ Moment</button>
+        ${cnt&&NATIVE?`<button class="btn ghost" data-browse="${key}">📷 Browse</button>`:""}
+        ${!es.length?`<button class="btn ghost" data-quiet="${key}">${st==="q"?"↺ Not quiet":"✓ Quiet"}</button>`:""}</div>
+    </div>`;
+  }
+  html+=`</div>`;
+  $("#main").innerHTML=html;
+  if(scrollKey){ const el=document.querySelector(`[data-month="${scrollKey}"]`); if(el){ el.classList.add("hl"); el.scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>el.classList.remove("hl"),2400);} }
+  else $("#main").scrollTop=0;
+}
+function evRow(e,cont){
+  const r=e.cover||(e.media||[])[0], u=thumb(r), k=KINDS[e.kind]||KINDS.other;
+  return `<button class="ev ${cont?"cont":""}" data-open="${esc(e.id)}">${u?`<img src="${esc(u)}" loading="lazy">`:`<span class="ic">${k[0]}</span>`}
+    <span class="et"><b>${cont?"↳ ":""}${esc(e.title||"Untitled moment")}</b><span>${esc(fmtRange(e))}${e.place?" · "+esc(e.place):""}</span></span>
+    <span class="st" title="${e.status||"seed"}">${e.status==="told"?"✦":e.status==="drafted"?"✎":"·"}</span></button>`;
+}
+function suggestionsFor(key, es){
+  const sm=SUGM(key); if(!sm) return [];
+  const used=es.map(e=>(e.title+" "+e.place).toLowerCase()), out=[];
+  const covered=(a,b)=>es.some(e=>{ const [s,t]=rangeMs(e,1); const x=new Date(a).getTime(), y=new Date(b).getTime()+864e5; return x<t&&y>s; });
+  (sm.albums||[]).forEach(([name,n,a,b])=>{ const clean=name.replace(/^(Jan|Feb|March|April|May|June|July|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*[\d\-–]*\s*/,"").trim()||name;
+    if(n<8||covered(a,b)) return; out.push({label:clean, meta:n+" photos · "+fmtD(a,b), start:a, end:b, title:clean, place:""}); });
+  (sm.places||[]).forEach(([name,n,lat,lng,a,b,home])=>{ if(home||n<3||covered(a,b)) return; if(used.some(u=>u.includes(name.split(",")[0].toLowerCase()))) return;
+    if(out.some(o=>o.start===a)) return; out.push({label:"In "+name, meta:n+" geotagged · "+fmtD(a,b), start:a, end:b, title:name, place:name, pin:{name,lat,lng}}); });
+  (sm.days||[]).forEach(([d,n])=>{ if(covered(d,d)||out.some(o=>o.start<=d&&d<=o.end)) return; out.push({label:"A big day", meta:n+" photos · "+fmtD(d,d), start:d, end:d, title:"", place:""}); });
+  return out.slice(0,3);
+}
+function fmtD(a,b){ const A=parts(a),B=parts(b); return MSHORT[A.m-1]+" "+A.d+(a===b?"":"–"+(A.m===B.m?"":MSHORT[B.m-1]+" ")+B.d); }
+
+/* ───────── event drawer ───────── */
+function newEvent(o){
+  const e=Object.assign({id:uid(),title:"",start:"",end:"",place:"",pins:[],people:"",kind:"journey",story:"",sync:"",meaning:"",song:"",tags:[],cover:null,media:[],dirs:[],status:"seed",created:new Date().toISOString()},o||{});
+  S.events.push(e); save(); return e;
+}
+function openEvent(id){
+  const e=ev(id); if(!e) return; cur.ev=id;
+  const cu=full(e.cover)||thumb(e.cover), k=e.kind||"journey";
+  const ths=S.threads.filter(t=>t.events.includes(e.id));
+  const sameYear=S.events.filter(x=>x.id!==e.id).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+  const idx=S.events.slice().sort((a,b)=>String(a.start).localeCompare(String(b.start))).findIndex(x=>x.id===e.id);
+  $("#drawer").innerHTML=`
+  <div class="dcov" style="${cu&&!(e.cover&&e.cover.v)?`background-image:url('${esc(cu)}')`:""}">
+    <div class="nav2"><button class="btn" data-step="-1" title="Previous moment">‹</button><button class="btn" data-step="1" title="Next moment">›</button></div>
+    <button class="x" data-close>✕</button>
+    <div class="ttl"><input id="eTitle" value="${esc(e.title)}" placeholder="Name this moment…"><div class="meta" id="eMeta">${esc(fmtRange(e))}${e.place?" · "+esc(e.place):""}</div></div>
+  </div>
+  <div class="dbody">
+    <div class="row"><div class="f"><label>Starts</label><input class="in" data-ef="start" value="${esc(e.start)}" placeholder="2023-02-07 · or 2023-02 · or 2023"></div>
+      <div class="f"><label>Ends</label><input class="in" data-ef="end" value="${esc(e.end)}" placeholder="optional"></div></div>
+    <div class="f"><label>What kind of moment</label><div class="kinds">${Object.entries(KINDS).map(([key,[i,n]])=>`<button class="kind ${key===k?"on":""}" data-kind="${key}">${i} ${n}</button>`).join("")}</div></div>
+    <div class="row"><div class="f"><label>Where</label><input class="in" data-ef="place" value="${esc(e.place)}" placeholder="Place, region, venue">
+        <span class="hint">${(e.pins||[]).length?"📍 "+e.pins.map(p=>esc(p.name)).join(" · "):"Map pins come from the place's photos"} ${NATIVE&&photosOK?'<a href="#" data-pin style="color:var(--teal)">· pin from photo GPS</a>':""}</span></div>
+      <div class="f"><label>Who was there · who you met</label><input class="in" data-ef="people" value="${esc(e.people)}" placeholder="Names, crews, teachers, new friends"></div></div>
+    <div class="row"><div class="f"><label>Song · show · release</label><input class="in" data-ef="song" value="${esc(e.song)}" placeholder="A song, set, or release tied to this"></div>
+      <div class="f"><label>Tags</label><input class="in" data-ef="tags" value="${esc((e.tags||[]).join(", "))}" placeholder="festival, ceremony, family, teaching…"></div></div>
+
+    <div class="f"><div style="display:flex;align-items:center;gap:8px"><span class="lab">Photos & videos</span><span class="note">${mediaOf(e).length} linked · ★ = cover · nothing is copied</span><span class="sp" style="flex:1"></span>
+      <button class="btn tl" data-pick>+ Add photos & videos</button></div>
+      <div class="tray" id="tray" style="margin-top:8px">${trayHTML(e)}</div>
+      ${(e.dirs||[]).length?`<div class="note" style="margin-top:6px">Suggested drive folders: ${e.dirs.map(d=>`<a href="#" data-dir="${esc(d)}" style="color:var(--cyan)">${esc(d.split("/").pop())}</a>`).join(" · ")}</div>`:""}
+    </div>
+
+    <div class="f"><label>The story</label><div class="prompts">${pick(PROMPTS,3).map(p=>`<button class="prompt" data-prompt="story">${esc(p)}</button>`).join("")}</div>
+      <textarea class="in big" data-ef="story" placeholder="Tell it like you'd tell it around the fire…">${esc(e.story)}</textarea></div>
+    <div class="f"><label>Why it mattered</label><span class="hint">The significance — what it changed, opened or set in motion.</span>
+      <textarea class="in" data-ef="meaning" placeholder="This is where…">${esc(e.meaning)}</textarea></div>
+    <div class="f"><label>Synchronicities & lore</label><span class="hint">Signs, echoes, names that found you, the thread that shows up again later.</span>
+      <textarea class="in" data-ef="sync" placeholder="Years later…">${esc(e.sync)}</textarea>
+      <div class="thr" style="margin-top:6px">${S.threads.map(t=>`<button class="chip ${t.events.includes(e.id)?"on":""}" data-thr="${esc(t.id)}">⟡ ${esc(t.title)}</button>`).join("")}
+        <button class="chip" data-newthr>+ New thread</button></div></div>
+    <div class="f"><label>Links to other moments</label><div class="thr">${ths.map(t=>t.events.filter(x=>x!==e.id).map(x=>ev(x)).filter(Boolean).map(x=>`<button class="chip" data-open="${esc(x.id)}">${esc(x.title)} · ${parts(x.start).y}</button>`).join("")).join("")||'<span class="note">Add this moment to a thread to see its echoes here.</span>'}</div></div>
+    <div class="note" style="margin-top:20px">${e.from==="mythica-v4"?"Started from the parchment Mythica (v4). ":""}<a href="#" data-del style="color:var(--rose)">Delete this moment</a></div>
+  </div>
+  <div class="dfoot"><div class="status">${["seed","drafted","told"].map(s=>`<button class="${(e.status||"seed")===s?"on":""} ${s}" data-status="${s}">${s==="seed"?"· Seed":s==="drafted"?"✎ Drafted":"✦ Told"}</button>`).join("")}</div>
+    <span class="sp" style="flex:1"></span><span class="note" id="savedNote">Saves as you type</span></div>`;
+  $("#drawer").classList.add("on"); $("#veil").classList.add("on");
+}
+function trayHTML(e){
+  const all=mediaOf(e);
+  return all.map((r,i)=>{ const u=thumb(r);
+    return `<div class="tile ${i===0&&e.cover?"cover":""}" data-view="${i}">${u?`<img src="${esc(u)}" loading="lazy" onerror="this.style.display='none'">`:`<div class="miss">${r.k==="ph"?"In Apple Photos<br>(open the Mac app)":r.k==="f"?"On a drive<br>(plug it in)":""}</div>`}
+      ${r.v?`<span class="badge">▶ ${r.dur?Math.round(r.dur)+"s":"video"}</span>`:""}
+      <div class="tb"><button data-cover="${i}" title="Make cover">★</button><button data-rm="${i}" title="Unlink">✕</button></div></div>`; }).join("")
+    + `<div class="tile addtile" data-pick><span style="font-size:22px">+</span>Add</div>`;
+}
+function pick(a,n){ const c=a.slice(); for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]];} return c.slice(0,n); }
+function closeDrawer(){ $("#drawer").classList.remove("on"); if(!$("#modal").classList.contains("on")) $("#veil").classList.remove("on"); cur.ev=null; refresh(); }
+function refresh(keepScroll){ const st=$("#main").scrollTop; renderRail(); renderStats(); renderYear(); if(keepScroll!==false) $("#main").scrollTop=st; }
+function setMedia(e,all){ e.cover=all[0]||null; e.media=all.slice(1); save(); }
+
+/* ───────── media picker (Apple Photos + linked folders) ───────── */
+let PK=null; // {e, tab, from, to, items, sel:Set, folder, files}
+function openPicker(e, tab, folderPath){
+  if(!NATIVE){ toast("Apple Photos and drive folders work in the Mythica Studio Mac app"); return; }
+  const [a,b]=rangeMs(e, parts(e.start).d?2:0);
+  PK={e, tab:tab||(photosOK?"photos":"folders"), from:a, to:b, items:null, sel:new Set(), folder:folderPath||((e.dirs||[])[0])||((S.folders[0]||{}).p)||"", files:null, all:false, q:""};
+  $("#modal").classList.remove("small"); $("#modal").classList.add("on"); $("#veil").classList.add("on"); loadPicker();
+}
+async function loadPicker(){
+  renderPicker();
+  if(PK.tab==="photos"){ if(!photosOK){ renderPicker(); return; }
+    const res=await call("query",{from:PK.from,to:PK.to,limit:3000}); PK.items=(res||[]).map(([id,ms,v,lat,lng,fav,dur])=>({r:{k:"ph",id,v:v?1:0,dur:v?dur:undefined},ms,lat,lng,fav})); }
+  else { if(!PK.folder){ PK.items=[]; renderPicker(); return; }
+    if(!PK.files||PK.files.path!==PK.folder){ PK.items=null; renderPicker(); const r=await call("scan",{path:PK.folder}); PK.files={path:PK.folder, missing:!!(r&&r.missing), list:((r&&r.files)||[])}; }
+    const q=PK.q.toLowerCase();
+    PK.items=PK.files.list.filter(([p,ms])=> (PK.all||!ms|| (ms>=PK.from&&ms<PK.to)) && (!q||p.toLowerCase().includes(q)) )
+      .map(([p,ms,v])=>({r:{k:"f",p,v:v?1:0},ms})).sort((x,y)=>x.ms-y.ms).slice(0,1500); }
+  renderPicker();
+}
+function renderPicker(){
+  const e=PK.e, have=new Set(mediaOf(e).map(refKey));
+  const d=x=>new Date(x).toISOString().slice(0,10);
+  let body="";
+  if(PK.tab==="photos"&&!photosOK) body=`<div class="empty">Mythica Studio needs permission to look at your Apple Photos library.<br>Nothing is copied or changed — moments just remember which photo is which.<br><br><button class="btn pri" data-auth>Connect Apple Photos</button></div>`;
+  else if(PK.items===null) body=`<div class="empty">Gathering…</div>`;
+  else if(PK.tab==="folders"&&PK.files&&PK.files.missing) body=`<div class="empty">That folder isn't reachable right now.<br>If it's on an external drive, plug the drive in and try again.</div>`;
+  else if(!PK.items.length) body=`<div class="empty">Nothing in this window.<br>Widen the dates${PK.tab==="folders"?" or tick “whole folder”":""}.</div>`;
+  else { const byDay={}; PK.items.forEach(it=>{ const k=it.ms?d(it.ms):"undated"; (byDay[k]=byDay[k]||[]).push(it); });
+    body=Object.entries(byDay).map(([day,its])=>`<div class="dayh">${day==="undated"?"Undated":new Date(day+"T12:00").toLocaleDateString(undefined,{weekday:"short",month:"long",day:"numeric",year:"numeric"})}
+      <span class="note">${its.length}</span><button class="btn" data-dayall="${day}">select day</button></div>
+      <div class="pgrid">${its.map(it=>{ const key=refKey(it.r), u=thumb(it.r);
+        return `<div class="tile ${PK.sel.has(key)?"sel":""}" data-pk="${esc(key)}" style="${have.has(key)?"opacity:.35":""}" title="${have.has(key)?"already linked":""}">${u?`<img src="${esc(u)}" loading="lazy">`:""}${it.r.v?`<span class="badge">▶ ${it.r.dur?Math.round(it.r.dur)+"s":""}</span>`:""}${it.fav?`<span class="badge" style="left:auto;right:5px">♥</span>`:""}</div>`; }).join("")}</div>`).join(""); }
+  $("#modal").innerHTML=`<div class="mhd"><h3>Link photos & videos</h3>
+    <div class="tabs"><button class="${PK.tab==="photos"?"on":""}" data-tab="photos">Apple Photos</button><button class="${PK.tab==="folders"?"on":""}" data-tab="folders">Folders & drives</button></div>
+    <span class="chip">${esc(e.title||"New moment")}</span>
+    <span class="sp" style="flex:1"></span>
+    <button class="btn ghost" data-win="-7">◂ week</button><span class="note">${d(PK.from)} → ${d(PK.to-1)}</span><button class="btn ghost" data-win="7">week ▸</button>
+    <button class="btn ghost" data-widen>widen ±3 days</button>
+    <button class="btn pri" data-pkadd ${PK.sel.size?"":"disabled"}>Link ${PK.sel.size||""} ${PK.sel.size===1?"item":"items"}</button>
+    <button class="btn ghost" data-pkclose>✕</button></div>
+    ${PK.tab==="folders"?`<div class="mhd" style="padding-top:8px;padding-bottom:8px"><select class="in" data-fsel style="max-width:380px">${S.folders.concat((e.dirs||[]).filter(p=>!S.folders.some(f=>f.p===p)).map(p=>({p,label:p.split("/").pop()}))).map(f=>`<option value="${esc(f.p)}" ${f.p===PK.folder?"selected":""}>${esc(f.label||f.p)}</option>`).join("")}</select>
+      <button class="btn" data-addfolder>+ Link a folder</button><input class="in" data-fq placeholder="filter by name…" value="${esc(PK.q)}" style="max-width:200px">
+      <label class="note"><input type="checkbox" data-fall ${PK.all?"checked":""}> whole folder (ignore dates)</label></div>`:""}
+    <div class="mbd" id="pkbody">${body}</div>`;
+}
+async function authPhotos(){ const s=await call("auth"); photosOK=(s==="yes"||s==="limited"); setPstat(s); if(photosOK){ await loadLive(); } return photosOK; }
+function setPstat(s){ const el=$("#pstat");
+  if(!NATIVE){ el.className="pstat off"; el.textContent="Writing mode · open the Mac app for photos"; return; }
+  if(s==="yes"||s==="limited"){ el.className="pstat on"; el.textContent="● Apple Photos linked"+(s==="limited"?" (selected only)":""); }
+  else { el.className="pstat off"; el.textContent="○ Connect Apple Photos"; el.dataset.auth=1; } }
+
+/* ───────── lightbox ───────── */
+let LB=null;
+function openLB(list, i, e){ LB={list,i,e}; drawLB(); $("#lb").classList.add("on"); }
+function drawLB(){ const r=LB.list[LB.i], u=full(r)||thumb(r);
+  $("#lb").innerHTML=`${LB.list.length>1?`<button class="ar" style="left:20px" data-lb="-1">‹</button><button class="ar" style="right:20px" data-lb="1">›</button>`:""}
+  ${r.v&&u?`<video src="${esc(u)}" controls autoplay playsinline></video>`:u?`<img src="${esc(u)}">`:`<div class="empty">This one lives ${r.k==="ph"?"in Apple Photos":"on a drive that isn't plugged in"}.</div>`}
+  <div class="cap">${LB.i+1} / ${LB.list.length} ${r.k==="f"?`· <a href="#" data-reveal style="color:var(--cyan)">show in Finder</a> · ${esc(r.p.split("/").slice(-2).join("/"))}`:r.k==="ph"?"· Apple Photos":""}
+  ${LB.e?` · <a href="#" data-lbcover style="color:var(--gold)">★ make cover</a>`:""} · <a href="#" data-lbclose style="color:var(--text2)">close (Esc)</a></div>`; }
+
+/* ───────── threads, folders, export modals ───────── */
+function openThreads(){
+  $("#modal").innerHTML=`<div class="mhd"><h3>⟡ Threads — how the story weaves itself</h3><span class="sp" style="flex:1"></span><button class="btn" data-newthr2>+ New thread</button><button class="btn ghost" data-mclose>✕</button></div>
+  <div class="mbd">${S.threads.map(t=>`<div class="trow"><input class="in serif" data-tf="title" data-tid="${esc(t.id)}" value="${esc(t.title)}" style="font-size:17px;color:var(--gold3);background:transparent;border-color:transparent;padding-left:0">
+    <textarea class="in" data-tf="text" data-tid="${esc(t.id)}" style="min-height:60px">${esc(t.text)}</textarea>
+    <div class="thr" style="margin-top:8px">${t.events.map(ev).filter(Boolean).sort((a,b)=>String(a.start).localeCompare(String(b.start))).map(x=>`<button class="chip" data-open="${esc(x.id)}">${parts(x.start).y} · ${esc(x.title)}</button>`).join("")||'<span class="note">Open a moment and tap ⟡ to add it here.</span>'}
+    <span class="sp" style="flex:1"></span><a href="#" class="note" data-thdel="${esc(t.id)}" style="color:var(--rose)">remove thread</a></div></div>`).join("")}</div>`;
+  $("#modal").classList.remove("small"); $("#modal").classList.add("on"); $("#veil").classList.add("on");
+}
+function openSettings(first){
+  $("#modal").innerHTML=`<div class="mhd"><h3>${first?"✦ Welcome to Mythica Studio":"⚙ Settings"}</h3><span class="sp" style="flex:1"></span><button class="btn ghost" data-mclose>✕</button></div>
+  <div class="mbd" style="max-width:640px">${first?`<p class="serif" style="font-size:17px;line-height:1.8;color:var(--text2);margin-bottom:18px">Your story, one month at a time. Pick the year it begins, connect Apple Photos (top right) and press <b>✦ Next blank</b> whenever you want a place to start. Photos and videos are linked where they live; nothing is copied.</p>`:""}
+  <div class="f"><label>Whose story is this?</label><input class="in" id="setOwner" value="${esc(S.owner||"")}" placeholder="Your name or artist name"></div>
+  <div class="f"><label>The story begins in</label><input class="in" id="setStart" type="number" min="1900" max="${NOW.getFullYear()}" value="${esc(S.startYear||YEARS[0])}"></div>
+  <button class="btn pri" data-saveset>Save</button>
+  <p class="note" style="margin-top:18px">Your story is saved ${NATIVE?"in Documents › Mythica Studio › mythica-studio-data.json, with a dated copy in backups/ every day":"in this browser only. Use ⇪ Export › Story data to keep a copy"}.</p></div>`;
+  $("#modal").classList.add("on","small"); $("#veil").classList.add("on");
+}
+function buildLive(albums, days){
+  const M={}; const mk=k=>M[k]=M[k]||{n:0,v:0,albums:[],places:[],days:[]};
+  (albums||[]).forEach(([t,n,a,b])=>{ if(!a) return; mk(a.slice(0,7)).albums.push([t,n,a,b]); });
+  const byM={}; Object.entries(days||{}).forEach(([d,n])=>{ (byM[d.slice(0,7)]=byM[d.slice(0,7)]||[]).push([d,n]); });
+  Object.entries(byM).forEach(([k,list])=>{ const avg=list.reduce((s,x)=>s+x[1],0)/list.length;
+    mk(k).days=list.filter(x=>x[1]>=Math.max(40,avg*2.5)).sort((x,y)=>y[1]-x[1]).slice(0,4); });
+  Object.values(M).forEach(m=>m.albums.sort((x,y)=>y[1]-x[1]));
+  return M;
+}
+async function loadLive(){
+  const c=await call("counts"); if(c){ liveCounts=c.months||c; }
+  const al=await call("albums"); LIVEM=buildLive(al||[], c&&c.days);
+  setYears(); renderRail(); renderStats(); renderYear();
+}
+function openFolders(){
+  $("#modal").innerHTML=`<div class="mhd"><h3>🗂 Linked folders & drives</h3><span class="sp" style="flex:1"></span>${NATIVE?`<button class="btn pri" data-addfolder>+ Link a folder</button>`:""}<button class="btn ghost" data-mclose>✕</button></div>
+  <div class="mbd folders"><p class="note" style="margin-bottom:12px">Studio reads these folders where they are — nothing is copied or moved. Apple Photos is linked separately (top right). Drives only show photos while plugged in.</p>
+  ${S.folders.map((f,i)=>`<div class="frow">🗂<span class="p" title="${esc(f.p)}">${esc(f.label||f.p)} <span class="note">· ${esc(f.p)}</span></span><span class="note" data-fstat="${i}"></span><button class="btn ghost" data-funlink="${i}">unlink</button></div>`).join("")||'<div class="empty">No folders linked yet.</div>'}</div>`;
+  $("#modal").classList.remove("small"); $("#modal").classList.add("on"); $("#veil").classList.add("on");
+  if(NATIVE) call("exists",{paths:S.folders.map(f=>f.p)}).then(r=>(r||[]).forEach((ok,i)=>{ const el=document.querySelector(`[data-fstat="${i}"]`); if(el) el.textContent=ok?"● reachable":"○ not plugged in"; }));
+}
+function openExport(){
+  $("#modal").innerHTML=`<div class="mhd"><h3>⇪ Export your story</h3><span class="sp" style="flex:1"></span><button class="btn ghost" data-mclose>✕</button></div>
+  <div class="mbd"><div class="exgrid">
+    <div class="excard"><h4>📜 Mythica chapters</h4><p>Markdown, one chapter per year (lore + every moment in order), plus one combined file. Ready to paste into the Into the Mythica writer.</p>
+      <label class="note"><input type="checkbox" id="xTold"> only moments marked ✦ Told</label><button class="btn pri" data-x="md">Export chapters</button></div>
+    <div class="excard"><h4>🃏 Website story cards</h4><p>An HTML card for each moment (cover photo, date, place, story, why it mattered, threads) plus a page with all cards. For a website, e.g. the story behind a show, a trip or a song. Cover photos are exported as JPEGs with the cards (the only copies Studio ever makes).</p>
+      <select class="in" id="xKind"><option value="">All kinds</option>${Object.entries(KINDS).map(([k,[i,n]])=>`<option value="${k}">${i} ${n}</option>`).join("")}</select>
+      <label class="note"><input type="checkbox" id="xTold2" checked> only ✦ Told moments</label><button class="btn pri" data-x="cards">Export cards</button></div>
+    <div class="excard"><h4>🗃 Story data</h4><p>Everything as one JSON file — moments, threads, chapter lore and every photo link. Claude can build bios, recaps, posts and the parchment Mythica from it.</p>
+      <button class="btn pri" data-x="json">Export data</button></div>
+  </div><p class="note" style="margin-top:16px">${NATIVE?"Exports land in Documents › Mythica Studio › exports and Finder opens to them.":"In a browser, exports download as files."}</p></div>`;
+  $("#modal").classList.remove("small"); $("#modal").classList.add("on"); $("#veil").classList.add("on");
+}
+function sortedEvents(f){ return S.events.filter(f||(()=>true)).sort((a,b)=>String(a.start).localeCompare(String(b.start))); }
+function mdFor(y, onlyTold){
+  const ch=S.years[y]||{}, es=sortedEvents(e=>parts(e.start).y===y&&(!onlyTold||e.status==="told"));
+  let s=`# ${y} — ${ch.title||"Untitled chapter"}\n\n`; if(ch.subtitle) s+=`*${ch.subtitle}*\n\n`; if(ch.lore) s+=ch.lore+"\n\n";
+  es.forEach(e=>{ s+=`## ${e.title||"Untitled moment"}\n\n**${fmtRange(e)}**${e.place?" · "+e.place:""}${e.people?"  \nWith: "+e.people:""}${e.song?"  \nSong / show: "+e.song:""}\n\n`;
+    if(e.story) s+=e.story+"\n\n"; if(e.meaning) s+=`**Why it mattered.** ${e.meaning}\n\n`; if(e.sync) s+=`**Threads & synchronicities.** ${e.sync}\n\n`;
+    const th=S.threads.filter(t=>t.events.includes(e.id)).map(t=>t.title); if(th.length) s+=`*Threads: ${th.join(" · ")}*\n\n`;
+    const m=mediaOf(e); if(m.length) s+=`<!-- media: ${m.map(r=>r.k==="ph"?"photos:"+r.id:r.p).join(" | ")} -->\n\n`; });
+  return s;
+}
+function slug(t){ return String(t||"moment").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,50)||"moment"; }
+function cardHTML(e, img){
+  const th=S.threads.filter(t=>t.events.includes(e.id)).map(t=>t.title);
+  return `<article class="mythica-card" id="${esc(slug(e.title))}">
+  ${img?`<img src="${esc(img)}" alt="${esc(e.title)}">`:""}
+  <div class="mc-body"><div class="mc-meta">${esc(fmtRange(e))}${e.place?" · "+esc(e.place):""}</div>
+  <h3>${esc(e.title)}</h3>${e.story?`<p>${esc(e.story).replace(/\n+/g,"</p><p>")}</p>`:""}
+  ${e.meaning?`<div class="mc-why"><b>Why it mattered</b><p>${esc(e.meaning)}</p></div>`:""}
+  ${e.sync?`<div class="mc-thread">✦ ${esc(e.sync)}</div>`:""}${th.length?`<div class="mc-tags">${th.map(esc).join(" · ")}</div>`:""}</div></article>`;
+}
+const CARD_CSS=`.mythica-card{max-width:680px;margin:28px auto;background:#0a1f17;color:#eef6ef;border:1px solid rgba(245,208,122,.3);border-radius:16px;overflow:hidden;font-family:-apple-system,Segoe UI,sans-serif}
+.mythica-card img{width:100%;max-height:420px;object-fit:cover;display:block}.mc-body{padding:20px 24px 24px}.mc-meta{color:#f5d07a;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.mythica-card h3{font-family:Palatino,Georgia,serif;font-weight:normal;font-size:28px;margin:6px 0 10px}.mythica-card p{line-height:1.7;color:#d6e4da;margin:0 0 10px}
+.mc-why{border-left:2px solid #f5d07a;padding:6px 14px;margin:14px 0;background:rgba(245,208,122,.06)}.mc-why b{color:#f5d07a;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.mc-thread{font-family:Palatino,Georgia,serif;font-style:italic;color:#fff1c4;margin-top:10px}.mc-tags{font-size:12px;color:#7d9a8a;margin-top:10px}`;
+async function doExport(kind){
+  const day=new Date().toISOString().slice(0,10);
+  const write=async (name,text,folder,images,reveal)=>{ if(NATIVE) return call("export",{name,text,folder:folder||"",images:images||[],reveal:reveal!==false});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"})); a.download=name; a.click(); };
+  if(kind==="md"){ const ot=$("#xTold").checked; let all="";
+    for(const y of YEARS){ const t=mdFor(y,ot); all+=t+"\n---\n\n"; await write(`mythica-chapter-${y}.md`,t,"chapters-"+day,null,false); }
+    await write(`mythica-story-all-chapters.md`,all,"chapters-"+day); toast("📜 "+YEARS.length+" chapters exported"); }
+  if(kind==="json"){ await write(`mythica-studio-story-data-${day}.json`,JSON.stringify(S,null,1)); toast("🗃 Story data exported"); }
+  if(kind==="cards"){ const k=$("#xKind").value, ot=$("#xTold2").checked;
+    const es=sortedEvents(e=>(!k||e.kind===k)&&(!ot||e.status==="told"));
+    if(!es.length){ toast("No moments match — mark some ✦ Told first"); return; }
+    const folder="cards-"+day, images=[]; let page="";
+    for(const e of es){ const f=slug(e.title)+".jpg"; if(e.cover) images.push({file:f,ref:e.cover});
+      const c=cardHTML(e, e.cover?(NATIVE?f:thumb(e.cover)):null); page+=c+"\n"; await write(`mythica-card-${slug(e.title)}.html`,`<style>${CARD_CSS}</style>\n${c}\n`,folder,null,false); }
+    await write(`mythica-story-cards-all.html`,`<!DOCTYPE html><meta charset="utf-8"><title>${esc(S.owner?S.owner+" · Stories":"Stories")}</title><style>body{background:#04110c;margin:0;padding:20px}${CARD_CSS}</style>\n${page}`,folder,images);
+    toast("🃏 "+es.length+" story cards exported"); }
+}
+
+/* ───────── toast + sparkle + fireflies ───────── */
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),2600); }
+function sparkle(x,y){ for(let i=0;i<22;i++){ const s=document.createElement("div"); s.className="spark"; document.body.appendChild(s);
+  const a=Math.random()*Math.PI*2, d=40+Math.random()*90; s.style.left=x+"px"; s.style.top=y+"px";
+  s.animate([{transform:"translate(0,0) scale(1)",opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(.2)`,opacity:0}],{duration:800+Math.random()*500,easing:"cubic-bezier(.2,.8,.2,1)"}).onfinish=()=>s.remove(); } }
+(function fireflies(){ const c=$("#ff"), g=c.getContext("2d"); let W,H; const P=[];
+  const rs=()=>{W=c.width=innerWidth;H=c.height=innerHeight}; rs(); addEventListener("resize",rs);
+  for(let i=0;i<34;i++) P.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,p:Math.random()*6});
+  (function tick(t){ g.clearRect(0,0,W,H); P.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.p+=.02; if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+    const a=(Math.sin(p.p)+1)/2*.55; g.beginPath(); g.arc(p.x,p.y,1.6,0,7); g.fillStyle=`rgba(255,241,196,${a})`; g.shadowColor="#f5d07a"; g.shadowBlur=10; g.fill(); });
+    requestAnimationFrame(tick); })(); })();
+
+/* ───────── navigation ───────── */
+function goYear(y,key){ cur.year=y; renderRail(); renderYear(key); }
+function nextBlank(){
+  const keys=[]; YEARS.forEach(y=>{ for(let m=1;m<=12;m++) keys.push(y+"-"+String(m).padStart(2,"0")); });
+  const start=cur.lastBlank||""; const pool=keys.filter(k=>monthState(k)==="ph");
+  if(!pool.length){ toast("✦ No blanks left with photos — every month is told or quiet"); return; }
+  const k=pool.find(x=>x>start)||pool[0]; cur.lastBlank=k; goYear(+k.slice(0,4),k);
+}
+
+/* ───────── events (delegated) ───────── */
+document.addEventListener("click", async ev0=>{
+  const t=ev0.target.closest("button,a,[data-open],[data-view],[data-pk],[data-pick]"); if(!t) return;
+  const d=t.dataset; if(t.tagName==="A") ev0.preventDefault();
+  if(d.year){ goYear(+d.year); return; }
+  if(d.open){ if($("#modal").classList.contains("on")) closeModal(); openEvent(d.open); return; }
+  if(d.add!==undefined && t.closest(".ybar")){ const e=newEvent({start:String(cur.year),title:""}); refresh(); openEvent(e.id); return; }
+  if(d.addm){ const e=newEvent({start:d.addm}); refresh(); openEvent(e.id); return; }
+  if(d.sug){ const s=JSON.parse(d.sug); const e=newEvent({title:s.title||"",start:s.start,end:s.end!==s.start?s.end:"",place:s.place||"",pins:s.pin?[s.pin]:[]});
+    refresh(); openEvent(e.id); if(NATIVE&&photosOK) openPicker(e,"photos"); else toast("✦ Moment created — name it and tell it"); return; }
+  if(d.quiet){ if(S.quiet[d.quiet]) delete S.quiet[d.quiet]; else S.quiet[d.quiet]=true; save(); refresh(); return; }
+  if(d.browse){ const e={start:d.browse,end:"",cover:null,media:[],title:MONTHS[+d.browse.slice(5)-1]+" "+d.browse.slice(0,4)}; PK=null;
+    openPicker(Object.assign(e,{_browse:true}),"photos"); return; }
+  if(d.close!==undefined){ closeDrawer(); return; }
+  if(d.step){ const all=sortedEvents(); const i=all.findIndex(x=>x.id===cur.ev); const n=all[i+(+d.step)]; if(n){ if(parts(n.start).y!==cur.year) goYear(parts(n.start).y); openEvent(n.id);} return; }
+  if(d.kind){ const e=ev(cur.ev); e.kind=d.kind; save(); document.querySelectorAll(".kind").forEach(b=>b.classList.toggle("on",b.dataset.kind===d.kind)); return; }
+  if(d.status){ const e=ev(cur.ev); const was=e.status; e.status=d.status; save(); document.querySelectorAll("[data-status]").forEach(b=>b.classList.toggle("on",b.dataset.status===d.status));
+    if(d.status==="told"&&was!=="told"){ const r=t.getBoundingClientRect(); sparkle(r.left+r.width/2,r.top); toast("✦ Told. Another page of the Mythica."); } return; }
+  if(d.prompt){ const ta=document.querySelector(`[data-ef="${d.prompt}"]`); const q=t.textContent; ta.value=(ta.value?ta.value.trimEnd()+"\n\n":"")+q+" "; ta.focus(); ta.dispatchEvent(new Event("input")); return; }
+  if(d.thr){ const th=S.threads.find(x=>x.id===d.thr); const i=th.events.indexOf(cur.ev); if(i>=0) th.events.splice(i,1); else th.events.push(cur.ev); save(); t.classList.toggle("on"); return; }
+  if(d.newthr!==undefined || d.newthr2!==undefined){ /* no window.prompt: the Mac app's web view doesn't show prompts */
+    const th={id:"th"+Date.now().toString(36),title:"New thread",text:"",events:cur.ev&&d.newthr!==undefined?[cur.ev]:[]}; S.threads.push(th); save();
+    if(cur.ev&&d.newthr!==undefined){ $("#drawer").classList.remove("on"); cur.ev=null; }
+    openThreads(); const inp=document.querySelector(`[data-tid="${th.id}"][data-tf="title"]`); if(inp){ inp.scrollIntoView({block:"center"}); inp.focus(); inp.select(); }
+    toast("⟡ Name your new thread"); return; }
+  if(d.thdel){ if(confirm("Remove this thread? (Moments stay.)")){ S.threads=S.threads.filter(x=>x.id!==d.thdel); save(); openThreads(); } return; }
+  if(d.del!==undefined){ const e=ev(cur.ev); if(confirm(`Delete “${e.title||"this moment"}”? Linked photos stay where they are.`)){ S.events=S.events.filter(x=>x.id!==e.id); S.threads.forEach(th=>th.events=th.events.filter(x=>x!==e.id)); save(); closeDrawer(); } return; }
+  if(d.pick!==undefined){ openPicker(ev(cur.ev)); return; }
+  if(d.dir){ const e=ev(cur.ev); openPicker(e,"folders",d.dir); return; }
+  if(d.pin!==undefined){ const e=ev(cur.ev); const ids=mediaOf(e).filter(r=>r.k==="ph").map(r=>r.id); if(!ids.length){ toast("Link some Apple Photos first"); return; }
+    const [a,b]=rangeMs(e,1); const res=await call("query",{from:a,to:b,limit:3000}); const pts=(res||[]).filter(x=>ids.includes(x[0])&&x[3]!=null);
+    if(!pts.length){ toast("None of the linked photos carry GPS"); return; }
+    const lat=pts.reduce((s,x)=>s+x[3],0)/pts.length, lng=pts.reduce((s,x)=>s+x[4],0)/pts.length; e.pins=[{name:e.place||e.title,lat:+lat.toFixed(4),lng:+lng.toFixed(4)}]; save(); openEvent(e.id); toast("📍 Pinned from "+pts.length+" photos"); return; }
+  if(d.cover){ const e=ev(cur.ev); const all=mediaOf(e); const [x]=all.splice(+d.cover,1); all.unshift(x); setMedia(e,all); openEvent(e.id); return; }
+  if(d.rm){ const e=ev(cur.ev); const all=mediaOf(e); all.splice(+d.rm,1); setMedia(e,all); $("#tray").innerHTML=trayHTML(e); return; }
+  if(d.view){ const e=ev(cur.ev); openLB(mediaOf(e),+d.view,e); return; }
+  if(d.tab){ PK.tab=d.tab; PK.items=null; loadPicker(); return; }
+  if(d.win){ const w=+d.win*864e5; PK.from+=w; PK.to+=w; PK.items=null; loadPicker(); return; }
+  if(d.widen!==undefined){ PK.from-=3*864e5; PK.to+=3*864e5; PK.items=null; loadPicker(); return; }
+  if(d.pk){ if(PK.sel.has(d.pk)) PK.sel.delete(d.pk); else PK.sel.add(d.pk); t.classList.toggle("sel");
+    const b=document.querySelector("[data-pkadd]"); b.disabled=!PK.sel.size; b.textContent=`Link ${PK.sel.size||""} ${PK.sel.size===1?"item":"items"}`; return; }
+  if(d.dayall){ const its=PK.items.filter(it=>(it.ms?new Date(it.ms).toISOString().slice(0,10):"undated")===d.dayall); its.forEach(it=>PK.sel.add(refKey(it.r))); renderPicker(); return; }
+  if(d.pkadd!==undefined){ let e=PK.e; const chosen=PK.items.filter(it=>PK.sel.has(refKey(it.r))).map(it=>it.r);
+    if(e._browse){ e=newEvent({start:e.start}); }
+    const all=mediaOf(e), have=new Set(all.map(refKey)); chosen.forEach(r=>{ if(!have.has(refKey(r))) all.push(r); }); setMedia(e,all);
+    closeModal(); refresh(); openEvent(e.id); toast("🔗 "+chosen.length+" linked — still living where they were"); return; }
+  if(d.pkclose!==undefined || d.mclose!==undefined){ closeModal(); return; }
+  if(d.auth!==undefined){ const ok=await authPhotos(); if(PK){ PK.items=null; loadPicker(); } if(!ok) toast("Photos access is off — turn it on in System Settings › Privacy › Photos"); return; }
+  if(d.addfolder!==undefined){ const p=await call("pickFolder"); if(!p) return; if(!S.folders.some(f=>f.p===p)) S.folders.push({p,label:p.split("/").pop()}); save();
+    if(PK&&$("#modal").classList.contains("on")&&PK.tab==="folders"){ PK.folder=p; PK.files=null; loadPicker(); } else openFolders(); return; }
+  if(d.saveset!==undefined){ S.owner=$("#setOwner").value.trim(); const y=+$("#setStart").value; if(y>1900&&y<=NOW.getFullYear()) S.startYear=y; save(); setYears();
+    if(!YEARS.includes(cur.year)) cur.year=YEARS[YEARS.length-1]; closeModal(); renderRail(); renderStats(); renderYear(); return; }
+  if(d.funlink){ S.folders.splice(+d.funlink,1); save(); openFolders(); return; }
+  if(d.x){ doExport(d.x); return; }
+  if(d.lb){ LB.i=(LB.i+(+d.lb)+LB.list.length)%LB.list.length; drawLB(); return; }
+  if(d.lbclose!==undefined){ $("#lb").classList.remove("on"); $("#lb").innerHTML=""; return; }
+  if(d.lbcover!==undefined){ const e=LB.e; const all=mediaOf(e); const [x]=all.splice(LB.i,1); all.unshift(x); setMedia(e,all); LB.list=mediaOf(e); LB.i=0; drawLB(); openEvent(e.id); return; }
+  if(d.reveal!==undefined){ call("reveal",{path:LB.list[LB.i].p}); return; }
+});
+$("#pstat").addEventListener("click",()=>{ if($("#pstat").dataset.auth) authPhotos(); });
+$("#bSettings").onclick=openSettings; $("#bNext").onclick=nextBlank; $("#bThreads").onclick=openThreads; $("#bFolders").onclick=openFolders; $("#bExport").onclick=openExport;
+$("#veil").onclick=()=>{ if($("#modal").classList.contains("on")) closeModal(); else closeDrawer(); };
+function closeModal(){ $("#modal").classList.remove("on","small"); $("#modal").innerHTML=""; PK=null; if(!$("#drawer").classList.contains("on")) $("#veil").classList.remove("on"); }
+document.addEventListener("input", e=>{
+  const t=e.target, d=t.dataset;
+  if(d.yf){ (S.years[cur.year]=S.years[cur.year]||{})[d.yf]=t.value; save(); return; }
+  if(d.ef){ const x=ev(cur.ev); if(!x) return; x[d.ef]=d.ef==="tags"?t.value.split(",").map(s=>s.trim()).filter(Boolean):t.value;
+    if(x.status==="seed"&&(d.ef==="story"||d.ef==="meaning")&&t.value.length>40){ x.status="drafted"; document.querySelectorAll("[data-status]").forEach(b=>b.classList.toggle("on",b.dataset.status==="drafted")); }
+    $("#eMeta").textContent=fmtRange(x)+(x.place?" · "+x.place:""); save(); return; }
+  if(t.id==="eTitle"){ const x=ev(cur.ev); x.title=t.value; save(); return; }
+  if(d.tf){ const th=S.threads.find(x=>x.id===d.tid); th[d.tf]=t.value; save(); return; }
+  if(d.fq!==undefined){ PK.q=t.value; clearTimeout(PK._t); PK._t=setTimeout(loadPicker,300); return; }
+});
+document.addEventListener("change", e=>{ const d=e.target.dataset;
+  if(d.fsel!==undefined){ PK.folder=e.target.value; PK.files=null; loadPicker(); }
+  if(d.fall!==undefined){ PK.all=e.target.checked; loadPicker(); } });
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape"){ if($("#lb").classList.contains("on")){ $("#lb").classList.remove("on"); $("#lb").innerHTML=""; } else if($("#modal").classList.contains("on")) closeModal(); else if(cur.ev) closeDrawer(); return; }
+  if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  if($("#lb").classList.contains("on")&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){ LB.i=(LB.i+(e.key==="ArrowRight"?1:-1)+LB.list.length)%LB.list.length; drawLB(); return; }
+  if(cur.ev||$("#modal").classList.contains("on")) return;
+  if(e.key==="ArrowRight"&&cur.year<YEARS[YEARS.length-1]) goYear(cur.year+1);
+  if(e.key==="ArrowLeft"&&cur.year>YEARS[0]) goYear(cur.year-1);
+  if(e.key==="n"||e.key==="N") nextBlank();
+});
+
+/* ───────── boot ───────── */
+(async function boot(){
+  let data=null;
+  if(NATIVE){ const h=await call("hello"); if(h){ data=h.data; photosOK=(h.photos==="yes"||h.photos==="limited"); setPstat(h.photos); } }
+  else setPstat();
+  if(!data){ try{ const ls=localStorage.getItem("mythica-studio-standalone"); if(ls) data=JSON.parse(ls); }catch(e){} }
+  S=data&&data.events?data:fromSeed();
+  S.quiet=S.quiet||{}; S.folders=S.folders||[]; S.threads=S.threads||[]; S.years=S.years||{};
+  setYears();
+  const h=+location.hash.slice(1); cur.year=YEARS.includes(h)?h:YEARS[YEARS.length-1];
+  renderRail(); renderStats(); renderYear();
+  if(!data){ save(); openSettings(true); }
+  if(NATIVE&&photosOK) loadLive();
+})();
+</script>
+</body>
+</html>

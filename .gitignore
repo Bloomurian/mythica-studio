@@ -1,0 +1,14 @@
+# build output
+build/
+build-log.txt
+# never commit stories, exports, keys or local settings
+mythica-studio-data.json
+backups/
+exports/
+*.env
+.env*
+*.pem
+*.key
+*.p12
+.DS_Store
+._*
