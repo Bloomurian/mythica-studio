@@ -119,8 +119,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
 }
 
-let app = NSApplication.shared
-let delegate = AppDelegate()
-app.delegate = delegate
-app.setActivationPolicy(.regular)
-app.run()
+// Entry point. (@main instead of top-level code, because the app is now built from more than one Swift file.)
+@main
+enum MythicaStudioMain {
+    static let delegate = AppDelegate()
+    static func main() {
+        let app = NSApplication.shared
+        app.delegate = delegate
+        app.setActivationPolicy(.regular)
+        app.run()
+    }
+}
